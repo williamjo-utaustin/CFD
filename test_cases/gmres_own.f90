@@ -13,20 +13,20 @@ subroutine test_2()
       implicit none
 
       integer, parameter :: n = 1000
-      integer, parameter :: nz_num = (n * 3) - 2
+      !integer, parameter :: nz_num = (n * 3) - 2
 
       double precision, dimension(n,n) :: A
       double precision, dimension(n) :: b
       double precision, dimension(n) :: x_r, x_est
-      integer :: i, j, k
+      integer :: i, j, k, nz_num
 
-      double precision, dimension(nz_num) :: a_spr 
-      integer, dimension(nz_num) :: r_spr, c_spr
+      double precision, dimension(:), allocatable :: a_spr 
+      integer, dimension(:), allocatable :: r_spr, c_spr
       
       integer :: itr_max, mr
       double precision :: tol_abs, tol_rel
       
-      itr_max = 2000
+      itr_max = 10000
       mr = n - 1
       tol_abs = 1.0D-08
       tol_rel = 1.0D-08
@@ -47,15 +47,20 @@ subroutine test_2()
       ! Code block below determines which part of each matrix is not zero
       !nz_num = 0
 
-      !do i = 1, n
-      !  do j = 1, n
-      !     if(A(i,j) > 0) then
-      !          nz_num = nz_num + 1
-      !     end if
-      !  end do
-      !end do 
-        
-      !write(6,*) nz_num
+      do i = 1, n
+        do j = 1, n
+           if(A(i,j) > 0) then
+                nz_num = nz_num + 1
+           end if
+        end do
+      end do 
+       
+      write(6,*) nz_num
+
+
+      allocate(a_spr(nz_num))
+      allocate(r_spr(nz_num))
+      allocate(c_spr(nz_num))
       
       k = 0
       do i = 1, n
@@ -83,6 +88,10 @@ subroutine test_2()
       do i = 1, n
         write (6, '(2x,i8,2x,g14.6)' ) i, x_est(i)
       end do
+      
+      deallocate(a_spr)
+      deallocate(r_spr)
+      deallocate(c_spr)
 
 end subroutine test_2
 

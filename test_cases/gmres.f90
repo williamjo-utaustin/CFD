@@ -770,7 +770,7 @@ subroutine mgmres_st ( n, nz_num, ia, ja, a, x, rhs, itr_max, mr, tol_abs, &
   real ( kind = 8 ) tol_abs
   real ( kind = 8 ) tol_rel
   real ( kind = 8 ) v(1:n,1:mr+1)
-  logical, parameter :: verbose = .true.
+  logical, parameter :: verbose = .false.
   real ( kind = 8 ) x(1:n)
   real ( kind = 8 ) y(1:mr+1)
 
