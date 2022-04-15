@@ -35,7 +35,7 @@ program test1_velocity
       double precision, dimension(:), allocatable :: x_mesh_2
       double precision, dimension(:), allocatable :: y_mesh_2
       
-      double precision, dimension(:,:), allocatable :: u, v
+      double precision, dimension(:,:), allocatable :: u, v, p
       double precision, dimension(:,:), allocatable :: u_temp, v_temp
       double precision, dimension(:,:), allocatable :: u_h, v_h
       double precision, dimension(:,:), allocatable :: N_u, N_v
@@ -53,6 +53,7 @@ program test1_velocity
       
       allocate(u(0:N_y + 2, 0:N_x + 2))
       allocate(v(0:N_y + 2, 0:N_x + 2))
+      allocate(p(0:N_y + 2, 0:N_x + 2))
       allocate(u_temp(0:N_y + 2, 0:N_x + 2))
       allocate(v_temp(0:N_y + 2, 0:N_x + 2))
       allocate(u_h(0:N_y+1, 0:N_x+1))
@@ -66,7 +67,7 @@ program test1_velocity
       ! create initial conditions of the domain
       u = 0
       v = 0
-
+      p = 0
       ! Loop here!
 
       ! maintain boundary conditions
@@ -125,10 +126,33 @@ program test1_velocity
       
       write(6,*) "x_mesh_hat", x_mesh_2
       write(6,*) "y_mesh_hat", y_mesh_2
-        
+       
+
+      ! call convective and diffusive operators for only the inner cells 
+      ! create u* and v* for inner cells only
       call convective_operator(u, v, h_x, h_y, N_u, N_v)
       call diffusive_operator(u, v, h_x, h_y, D_u, D_v)
       call vel_temp(u, v, h_x, h_y, N_u, N_v, D_u, D_v, u_temp, v_temp)
+
+
+      ! constrain boundary conditions
+      ! use u* and v*, along with initial assumption of p to get u* and v* near or at boundaries
+      ! create inlet u* (Dirichlet Condition)
+      call u_temp_inlet(u_temp, h_x, h_y, p)
+
+
+
+      ! create outlet u* (Neumann Condition)
+
+      ! create top and bottom boundaries for u* (Dirichlet Condition)
+
+
+      ! create inlet v*
+
+      ! create outlet v* 
+
+      ! create top and bottom boundaries for v*
+
 
 
 
@@ -152,6 +176,7 @@ program test1_velocity
       
       deallocate(u)
       deallocate(v)
+      deallocate(p)
       deallocate(u_h)
       deallocate(v_h)
       deallocate(N_u)
@@ -342,20 +367,65 @@ subroutine vel_temp(u, v, h_x, h_y, N_u, N_v, D_u, D_v, u_temp, v_temp)
       
       do i = 1, N_y
             do j = 1, N_x
-                  u_temp(i,j) = u(i,j) + (delta_t/(h_x * h_y)) * (-N_u(i,j) + nu * D_u(i,j))
+                 write(6,*) i,j 
+                 u_temp(i,j) = u(i,j) + (delta_t/(h_x * h_y)) * (-N_u(i,j) + nu * D_u(i,j))
             end do
       end do
 
       do i = 1, N_y
             do j = 1, N_x
-                  v_temp(i,j) = v(i,j) + (delta_t/(h_x * h_y)) * (-N_v(i,j) + nu * D_v(i,j))
+                 write(6,*) i,j 
+                 v_temp(i,j) = v(i,j) + (delta_t/(h_x * h_y)) * (-N_v(i,j) + nu * D_v(i,j))
             end do
       end do
 
-
 end subroutine vel_temp
 
+subroutine u_temp_inlet(u_temp, h_x, h_y, p)
+     
+    use program_variables
+    
+    implicit none
 
+    double precision, dimension(0:N_y+2,0:N_x+2), intent(inout) :: u_temp
+    double precision, dimension(0:N_y+2,0:N_x+2), intent(in) :: p
+    double precision, intent(in) :: h_x, h_y
+
+    integer :: i, j
+    double precision :: G
+
+    do i = 1, N_y
+
+        call g_operator(p, h_x, h_y, i, 1, 1, G)
+        u_temp(i,1) = u_inlet + delta_t * G
+
+    end do
+
+
+
+end subroutine u_temp_inlet
+
+subroutine g_operator(p, h_x, h_y, i, j, e_x, G)
+   
+    use program_variables
+
+    implicit none
+
+    double precision, dimension(0:N_y+2,0:N_x+2), intent(in) :: p
+    integer, intent(in) :: i, j, e_x
+    double precision, intent(out) :: G
+    double precision, intent(in) :: h_x, h_y
+
+
+    ! x-axis for G
+    if(e_x.eq.1) then
+           g = (p(i,j) - p(i,j-1))/h_x
+    else
+           g = (p(i,j) - p(i-1,j))/h_y
+    end if
+     
+    
+end subroutine g_operator
 
 
 
